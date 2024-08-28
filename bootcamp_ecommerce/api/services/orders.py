@@ -8,7 +8,7 @@ from pydantic_mongo import PydanticObjectId
 
 from ..__common_deps import QueryParamsDependency
 from ..config import COLLECTIONS, db
-from ..models import Order, StoredOrder, OrderItem, OrderStatus
+from ..models import Order, CreateOrderItem, StoredOrder, OrderStatus, OrderItem
 
 
 class OrdersService:
@@ -18,18 +18,55 @@ class OrdersService:
 
 
     @classmethod
-    def create_one(cls, order: Order):
+    def shopping_cart(cls, order: CreateOrderItem):
+        product = order.model_dump(exclude={"customer_id"})
         pending_order = cls.get_pending_order_by_customer_id(order.customer_id)
-        document = cls.collection.insert_one(order.model_dump())
+        if not pending_order:
+            order = Order(
+                customer_id=order.customer_id,
+                products=[],
+                status=OrderStatus.pending,
+            )
+            document = cls.collection.insert_one(order)
+            pending_order = str(document.inserted_id)
+        document =cls.add_product(pending_order, product)
         if document:
-            return str(document.inserted_id)
+            return document
         return None
     
     @classmethod
-    def add_item(cls, id: PydanticObjectId, order_item: OrderItem):
+    def add_item(cls, id: PydanticObjectId, product: OrderItem):
         document = cls.collection.find_one_and_update(
             {"_id": id},
-            {"$push": {"items": order_item}},
+            {"$push": {"products": product}},
+            return_document=True,
+        )
+        if document:
+            return StoredOrder.model_validate(document).model_dump()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
+            )
+
+    @classmethod
+    def delete_item(cls, id: PydanticObjectId, product: OrderItem):
+        document = cls.collection.find_one_and_update(
+            {"_id": id},
+            {"$pull": {"products": product}},
+            return_document=True,
+        )
+        if document:
+            return StoredOrder.model_validate(document).model_dump()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
+            )
+
+    @classmethod
+    def update_shopping_cart_status(cls, id: PydanticObjectId, status: OrderStatus):
+        document = cls.collection.find_one_and_update(
+            {"_id": id, "status": OrderStatus.pending},
+            {"$set": {"status": status}},
             return_document=True,
         )
         if document:
