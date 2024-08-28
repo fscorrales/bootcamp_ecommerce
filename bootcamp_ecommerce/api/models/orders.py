@@ -1,4 +1,4 @@
-__all__ = ["OrderItem", "Order", "StoredOrder"]
+__all__ = ["OrderItem", "Order", "StoredOrder", "OrderStatus"]
 
 from enum import Enum
 

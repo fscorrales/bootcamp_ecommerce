@@ -8,7 +8,7 @@ from pydantic_mongo import PydanticObjectId
 
 from ..__common_deps import QueryParamsDependency
 from ..config import COLLECTIONS, db
-from ..models import Order, StoredOrder, OrderItem
+from ..models import Order, StoredOrder, OrderItem, OrderStatus
 
 
 class OrdersService:
@@ -19,6 +19,7 @@ class OrdersService:
 
     @classmethod
     def create_one(cls, order: Order):
+        pending_order = cls.get_pending_order_by_customer_id(order.customer_id)
         document = cls.collection.insert_one(order.model_dump())
         if document:
             return str(document.inserted_id)
@@ -56,6 +57,21 @@ class OrdersService:
                         {"seller_id": authorized_user_id},
                     ]
                 }
+            )
+
+        if db_order := cls.collection.find_one(filter_criteria):
+            return StoredOrder.model_validate(db_order).model_dump()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
+            )
+
+    @classmethod
+    def get_one_by_customer_id(cls, customer_id: PydanticObjectId, status: OrderStatus | None):
+        filter_criteria: dict = {"customer_id": id}
+        if status:
+            filter_criteria.update(
+                {"status": status}
             )
 
         if db_order := cls.collection.find_one(filter_criteria):
