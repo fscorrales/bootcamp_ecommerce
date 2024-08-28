@@ -9,8 +9,8 @@ class Product(BaseModel):
     name: str
     price: float
     quantity: int
-    description: str = Field(default=None)
-    image: str = Field(default=None)
+    description: str | None = Field(default=None)
+    image: str | None = Field(default=None)
 
 
 class UpdationProduct(BaseModel):

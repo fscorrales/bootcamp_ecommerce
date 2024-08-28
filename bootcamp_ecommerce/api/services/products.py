@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from pydantic_mongo import PydanticObjectId
 
 from ..config import COLLECTIONS, db
+from ..config.__base_config import logger
 from ..models import Product, StoredProduct, UpdationProduct
 from ..__common_deps import QueryParamsDependency
 
@@ -42,7 +43,7 @@ class ProductsService:
     def update_one(cls, id: PydanticObjectId, product: UpdationProduct):
         document = cls.collection.find_one_and_update(
             {"_id": id},
-            {"$set": product.model_dump()},
+            {"$set": product.model_dump(exclude_unset=True)},
             return_document=True,
         )
 
