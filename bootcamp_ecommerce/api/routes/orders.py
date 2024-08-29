@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from pydantic_mongo import PydanticObjectId
 
 from ..__common_deps import QueryParams, QueryParamsDependency
+from ..config import logger
 from ..models import UpdationProduct, UpdateOrderItem, OrderStatus
 from ..services import (
     OrdersServiceDependency,
@@ -24,17 +25,17 @@ async def get_all_orders(
     return orders.get_all(params)
 
 
-@orders_router.get("/get_by_seller/{id}")
-async def get_orders_by_seller_id(
-    id: PydanticObjectId, security: SecurityDependency, orders: OrdersServiceDependency
-):
-    auth_user_id = security.auth_user_id
-    assert (
-        auth_user_id == id or security.auth_user_role == "admin"
-    ), "User does not have access to this orders"
+# @orders_router.get("/get_by_seller/{id}")
+# async def get_orders_by_seller_id(
+#     id: PydanticObjectId, security: SecurityDependency, orders: OrdersServiceDependency
+# ):
+#     auth_user_id = security.auth_user_id
+#     assert (
+#         auth_user_id == id or security.auth_user_role == "admin"
+#     ), "User does not have access to this orders"
 
-    params = QueryParams(filter=f"seller_id={id}")
-    return orders.get_all(params)
+#     params = QueryParams(filter=f"seller_id={id}")
+#     return orders.get_all(params)
 
 
 @orders_router.get("/get_by_customer/{id}")
@@ -46,16 +47,16 @@ async def get_orders_by_customer_id(
         auth_user_id == id or security.auth_user_role == "admin"
     ), "User does not have access to this orders"
 
-    params = QueryParams(filter=f"custommer_id={id}")
+    params = QueryParams(filter=f"customer_id={id}")
     return orders.get_all(params)
 
 
-@orders_router.get("/get_by_product/{id}")
-async def get_orders_by_product_id(
-    id: PydanticObjectId, security: SecurityDependency, orders: OrdersServiceDependency
-):
-    auth_user_id = security.auth_user_id if security.auth_user_role != "admin" else None
-    return orders.get_one(id, authorized_user_id=auth_user_id)
+# @orders_router.get("/get_by_product/{id}")
+# async def get_orders_by_product_id(
+#     id: PydanticObjectId, security: SecurityDependency, orders: OrdersServiceDependency
+# ):
+#     auth_user_id = security.auth_user_id if security.auth_user_role != "admin" else None
+#     return orders.get_one(id, authorized_user_id=auth_user_id)
 
 
 @orders_router.post("/add_to_cart")
@@ -108,7 +109,7 @@ async def buy_shopping_cart(
     security: SecurityDependency
 ):
     auth_user_id = security.auth_user_id
-    order = orders.get_one(id)
+    order = orders.get_one(id, None)
     assert (
         auth_user_id == order.get("customer_id", None) or security.auth_user_role == "admin"
     ), "User does not have access to this order"
@@ -122,7 +123,7 @@ async def cancel_shopping_cart(
     security: SecurityDependency
 ):  
     auth_user_id = security.auth_user_id
-    order = orders.get_one(id)
+    order = orders.get_one(id, None)
     assert (
         auth_user_id == order.get("customer_id", None) or security.auth_user_role == "admin"
     ), "User does not have access to this order"

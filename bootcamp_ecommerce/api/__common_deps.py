@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import Depends
 from pymongo.collection import Collection
-from .config.__base_config import logger
+from .config import logger
 
 
 @dataclass

@@ -7,8 +7,7 @@ from fastapi import Depends, HTTPException, status
 from pydantic_mongo import PydanticObjectId
 
 from ..__common_deps import QueryParamsDependency, QueryParams
-from ..config import COLLECTIONS, db
-from ..config.__base_config import logger
+from ..config import COLLECTIONS, db, logger
 from ..models import Order, UpdateOrderItem, StoredOrder, OrderStatus, OrderItem
 from bson import ObjectId
 
@@ -35,18 +34,24 @@ class OrdersService:
         # pending_order = cls.get_one_by_customer_id(
         #     order.customer_id, OrderStatus.pending
         # )
-        if not pending_order and not remove_from_cart:
-            # order = Order(
-            #     customer_id=order.customer_id,
-            #     status=OrderStatus.pending,
-            # )
-            order_dict = order.model_dump(include={"customer_id"}).update(
-                {"status": OrderStatus.pending, "products": [product]}
+        if len(pending_order) == 0 and not remove_from_cart:
+            order = Order(
+                customer_id=order.customer_id,
+                products=[product],
+                status=OrderStatus.pending
             )
-            document = cls.collection.insert_one(order_dict)
+            # order_dict = order.model_dump(include={"customer_id"})
+            # order_dict.update(
+            #     {"products": [product], "status": OrderStatus.pending}
+            # )
+            # order_dict = order_dict.update(
+            #     {"status": OrderStatus.pending, "products": [product]}
+            # )
+            document = cls.collection.insert_one(order.model_dump())
+            logger.info(document)
             # pending_order = str(document.inserted_id)
         else:
-            if remove_from_cart and pending_order:
+            if remove_from_cart and len(pending_order) > 0:
                 document = cls.update_order_item(
                     ObjectId(pending_order.get("id")), product, 'remove'
                 )

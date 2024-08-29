@@ -5,8 +5,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from pydantic_mongo import PydanticObjectId
 
-from ..config import COLLECTIONS, db
-from ..config.__base_config import logger
+from ..config import COLLECTIONS, db, logger
 from ..models import Product, StoredProduct, UpdationProduct
 from ..__common_deps import QueryParamsDependency
 
