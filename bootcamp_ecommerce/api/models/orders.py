@@ -1,6 +1,6 @@
 __all__ = [
-    "OrderStatus", "OrderItem", "CreateOrderItem", 
-    "DeleteOrderItem", "Order", "StoredOrder"
+    "OrderStatus", "OrderItem", "UpdateOrderItem", 
+    "Order", "StoredOrder"
 ]
 
 from enum import Enum
@@ -23,13 +23,8 @@ class OrderItem(BaseModel):
     quantity: int
 
 
-class CreateOrderItem(OrderItem):
+class UpdateOrderItem(OrderItem):
     customer_id: PydanticObjectId
-
-
-class DeleteOrderItem(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    product_id: PydanticObjectId
 
 
 class Order(BaseModel):

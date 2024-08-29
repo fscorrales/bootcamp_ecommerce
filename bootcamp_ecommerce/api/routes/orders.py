@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from pydantic_mongo import PydanticObjectId
 
 from ..__common_deps import QueryParams, QueryParamsDependency
-from ..models import UpdationProduct, CreateOrderItem, DeleteOrderItem, OrderStatus
+from ..models import UpdationProduct, UpdateOrderItem, OrderStatus
 from ..services import (
     OrdersServiceDependency,
     ProductsServiceDependency,
@@ -60,7 +60,7 @@ async def get_orders_by_product_id(
 
 @orders_router.post("/add_to_cart")
 async def add_product(
-    order: CreateOrderItem,
+    order: UpdateOrderItem,
     orders: OrdersServiceDependency,
     products: ProductsServiceDependency,
     security: SecurityDependency,
@@ -71,35 +71,33 @@ async def add_product(
     ), "User does not have access to this order"
     product = products.get_one(order.product_id)
     assert product.get("quantity", 0) >= order.quantity, "Product is out of stock"
-    products.update_one(
-        order.product_id,
-        UpdationProduct(quantity=product["quantity"] - order.quantity),
-    )
     result = orders.shopping_cart(order)
     if result:
+        products.update_one(
+            order.product_id,
+            UpdationProduct(quantity=product["quantity"] - order.quantity),
+        )
         return {"result message": f"Order created with id: {result}"}
 
 
-@orders_router.delete("/delete_from_cart")
-async def delete_product(
-    order: DeleteOrderItem,
+@orders_router.delete("/remove_from_cart")
+async def remove_product(
+    order: UpdateOrderItem,
     orders: OrdersServiceDependency,
     products: ProductsServiceDependency,
     security: SecurityDependency,
 ):
     auth_user_id = security.auth_user_id
-    order = orders.get_one(order.id)
     assert (
-        auth_user_id == order.get("customer_id", None) or security.auth_user_role == "admin"
+        auth_user_id == order.costumer_id or security.auth_user_role == "admin"
     ), "User does not have access to this order"
     product = products.get_one(order.product_id)
-    # assert product.get("quantity", 0) >= order.quantity, "Product is out of stock"
-    products.update_one(
-        order.product_id,
-        UpdationProduct(quantity=product["quantity"] + order.quantity),
-    )
-    result = orders.shopping_cart(order)
+    result = orders.shopping_cart(order, remove_from_cart=True)
     if result:
+        products.update_one(
+            order.product_id,
+            UpdationProduct(quantity=product["quantity"] + order.quantity),
+        )
         return {"result message": f"Order created with id: {result}"}
 
 
