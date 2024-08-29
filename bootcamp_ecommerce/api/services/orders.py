@@ -8,8 +8,9 @@ from pydantic_mongo import PydanticObjectId
 
 from ..__common_deps import QueryParamsDependency
 from ..config import COLLECTIONS, db
+from ..config.__base_config import logger
 from ..models import Order, CreateOrderItem, StoredOrder, OrderStatus, OrderItem
-
+from bson import ObjectId
 
 class OrdersService:
     assert (collection_name := "orders") in COLLECTIONS
@@ -20,22 +21,24 @@ class OrdersService:
     @classmethod
     def shopping_cart(cls, order: CreateOrderItem):
         product = order.model_dump(exclude={"customer_id"})
-        pending_order = cls.get_pending_order_by_customer_id(order.customer_id)
+        pending_order = cls.get_one_by_customer_id(
+            order.customer_id, OrderStatus.pending
+        )
         if not pending_order:
             order = Order(
                 customer_id=order.customer_id,
-                products=[],
                 status=OrderStatus.pending,
             )
-            document = cls.collection.insert_one(order)
+            document = cls.collection.insert_one(order.model_dump(exclude_unset=True))
             pending_order = str(document.inserted_id)
-        document =cls.add_product(pending_order, product)
+        document =cls.add_item(ObjectId(pending_order.get("id")), product)
         if document:
             return document
         return None
     
     @classmethod
     def add_item(cls, id: PydanticObjectId, product: OrderItem):
+        logger.info(f'Adding item {product} to order {id}')
         document = cls.collection.find_one_and_update(
             {"_id": id},
             {"$push": {"products": product}},
@@ -63,10 +66,10 @@ class OrdersService:
             )
 
     @classmethod
-    def update_shopping_cart_status(cls, id: PydanticObjectId, status: OrderStatus):
+    def update_shopping_cart_status(cls, id: PydanticObjectId, order_status: OrderStatus):
         document = cls.collection.find_one_and_update(
             {"_id": id, "status": OrderStatus.pending},
-            {"$set": {"status": status}},
+            {"$set": {"status": order_status}},
             return_document=True,
         )
         if document:
@@ -104,13 +107,12 @@ class OrdersService:
             )
 
     @classmethod
-    def get_one_by_customer_id(cls, customer_id: PydanticObjectId, status: OrderStatus | None):
-        filter_criteria: dict = {"customer_id": id}
-        if status:
+    def get_one_by_customer_id(cls, customer_id: str, order_status: OrderStatus | None):
+        filter_criteria: dict = {"customer_id": str(customer_id)}
+        if order_status:
             filter_criteria.update(
-                {"status": status}
+                {"status": order_status}
             )
-
         if db_order := cls.collection.find_one(filter_criteria):
             return StoredOrder.model_validate(db_order).model_dump()
         else:
