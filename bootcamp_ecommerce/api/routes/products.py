@@ -7,7 +7,7 @@ from pydantic_mongo import PydanticObjectId
 
 from ..models import Product, UpdationProduct
 from ..services import ProductsServiceDependency, SecurityDependency
-from ..__common_deps import QueryParamsDependency
+from ..__common_deps import QueryParamsDependency, QueryParams
 
 products_router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -26,6 +26,12 @@ async def get_product(id: PydanticObjectId, products: ProductsServiceDependency)
         content={"error": f"Product with id: {id}, was not found."},
     )
 
+@products_router.get("/get_by_seller/{id}")
+async def get_orders_by_seller_id(
+    id: PydanticObjectId, products: ProductsServiceDependency
+):
+    params = QueryParams(filter=f"seller_id={id}")
+    return products.get_all(params)
 
 @products_router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_product(
