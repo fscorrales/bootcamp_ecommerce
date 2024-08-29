@@ -16,6 +16,14 @@ class OrdersService:
     assert (collection_name := "orders") in COLLECTIONS
     collection = db[collection_name]
 
+    # Used by seed_database.py 
+    @classmethod
+    def create_one(cls, order: Order):
+        document = cls.collection.insert_one(order.model_dump())
+        if document:
+            return str(document.inserted_id)
+        return None
+
 
     @classmethod
     def shopping_cart(cls, order: UpdateOrderItem, remove_from_cart: bool = False):

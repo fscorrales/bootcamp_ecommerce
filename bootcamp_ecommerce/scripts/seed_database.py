@@ -120,7 +120,7 @@ for product in products:
 orders = [
     {
         "customer_id": users_ids[2],
-        "items": [{
+        "products": [{
             "product_id": product_ids[9],
             "price": 900,
             "quantity": 1,
@@ -129,15 +129,17 @@ orders = [
             "product_id": product_ids[1],
             "price": 800,
             "quantity": 3,
-        }]
+        }],
+        "status": "completed"
     },
     {
         "customer_id": users_ids[2],
-        "items": [{
+        "products": [{
             "product_id": product_ids[5],
             "price": 496,
             "quantity": 2,
-        }]
+        }],
+        "status": "completed"
     },
 ]
 

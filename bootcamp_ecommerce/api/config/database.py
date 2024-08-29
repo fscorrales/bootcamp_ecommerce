@@ -9,8 +9,8 @@ DB_NAME = "bootcamp_eCommerce_app"
 COLLECTIONS = ["products", "users", "orders"]
 
 # Create a new client and connect to the server
-client = MongoClient(MONGODB_URI, server_api=ServerApi("1"))
-
+# client = MongoClient(MONGODB_URI, server_api=ServerApi("1"))
+client = MongoClient()
 
 # Send a ping to confirm a successful connection
 try:
