@@ -27,14 +27,16 @@ class OrdersService:
     @classmethod
     def shopping_cart(cls, order: UpdateOrderItem, remove_from_cart: bool = False):
         product = order.model_dump(exclude={"customer_id"})
+        logger.info(f"customer_id={order.customer_id}, status={OrderStatus.pending}")
         params = QueryParams(
-            filter=f"custommer_id={order.customer_id}, status={OrderStatus.pending}"
+            filter=f"customer_id={order.customer_id}, status=pending"
         )
         pending_order = cls.get_all(params)
         # pending_order = cls.get_one_by_customer_id(
         #     order.customer_id, OrderStatus.pending
         # )
-        if len(pending_order) == 0 and not remove_from_cart:
+        logger.info(pending_order)
+        if  len(pending_order) == 0 and not remove_from_cart:
             order = Order(
                 customer_id=order.customer_id,
                 products=[product],
@@ -50,14 +52,15 @@ class OrdersService:
             document = cls.collection.insert_one(order.model_dump())
             logger.info(document)
             # pending_order = str(document.inserted_id)
-        else:
-            if remove_from_cart and len(pending_order) > 0:
+        elif len(pending_order) > 0:
+            id_pending_order = pending_order[0].get("id")
+            if remove_from_cart:
                 document = cls.update_order_item(
-                    ObjectId(pending_order.get("id")), product, 'remove'
+                    ObjectId(id_pending_order), product, 'remove'
                 )
             else:
                 document = cls.update_order_item(
-                    ObjectId(pending_order.get("id")), product, "add"
+                    ObjectId(id_pending_order), product, "add"
                 )
         if document:
             return document
@@ -80,6 +83,7 @@ class OrdersService:
                 {"$pull": {"products": product}},
                 return_document=True,
         )
+        logger.info(document)
         if document:
             return StoredOrder.model_validate(document).model_dump()
         else:
@@ -142,20 +146,20 @@ class OrdersService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
             )
 
-    # @classmethod
-    # def get_one_by_customer_id(cls, customer_id: str, order_status: OrderStatus | None):
-    #     # filter_criteria: dict = {"customer_id": str(customer_id)}
-    #     filter_criteria = dict(costumer_id=str(customer_id))
-    #     if order_status:
-    #         filter_criteria.update(
-    #             {"status": order_status}
-    #         )
-    #     if db_order := cls.collection.find_one(filter_criteria):
-    #         return StoredOrder.model_validate(db_order).model_dump()
-    #     else:
-    #         raise HTTPException(
-    #             status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
-    #         )
+    @classmethod
+    def get_one_by_customer_id(cls, customer_id: str, order_status: OrderStatus | None):
+        filter_criteria: dict = {"customer_id": str(customer_id)}
+        # filter_criteria = dict(costumer_id=str(customer_id))
+        if order_status:
+            filter_criteria.update(
+                {"status": order_status}
+            )
+        if db_order := cls.collection.find_one(filter_criteria):
+            return StoredOrder.model_validate(db_order).model_dump()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Order not found"
+            )
         
 
 OrdersServiceDependency = Annotated[OrdersService, Depends()]

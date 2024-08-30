@@ -90,7 +90,7 @@ async def remove_product(
 ):
     auth_user_id = security.auth_user_id
     assert (
-        auth_user_id == order.costumer_id or security.auth_user_role == "admin"
+        auth_user_id == order.customer_id or security.auth_user_role == "admin"
     ), "User does not have access to this order"
     product = products.get_one(order.product_id)
     result = orders.shopping_cart(order, remove_from_cart=True)
