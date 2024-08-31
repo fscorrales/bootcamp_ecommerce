@@ -1,6 +1,6 @@
 __all__ = ["products_router"]
 
-from fastapi import status
+from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 from pydantic_mongo import PydanticObjectId
@@ -19,6 +19,26 @@ async def list_products(
     return products.get_all(params)
 
 
+@products_router.get("/deleted")
+async def list_deleted_products(
+    products: ProductsServiceDependency,
+    params: QueryParamsDependency,
+    security: SecurityDependency,
+):
+    security.is_admin_or_raise
+    return products.get_all_deleted(params)
+
+
+@products_router.get("/include_deleted")
+async def list_products(
+    products: ProductsServiceDependency,
+    params: QueryParamsDependency,
+    security: SecurityDependency,
+):
+    security.is_admin_or_raise
+    return products.get_all(params)
+
+
 @products_router.get("/{id}")
 async def get_product(id: PydanticObjectId, products: ProductsServiceDependency):
     return products.get_one(id) or JSONResponse(
@@ -26,12 +46,6 @@ async def get_product(id: PydanticObjectId, products: ProductsServiceDependency)
         content={"error": f"Product with id: {id}, was not found."},
     )
 
-@products_router.get("/get_by_seller/{id}")
-async def get_orders_by_seller_id(
-    id: PydanticObjectId, products: ProductsServiceDependency
-):
-    params = QueryParams(filter=f"seller_id={id}")
-    return products.get_all(params)
 
 @products_router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_product(
@@ -46,11 +60,43 @@ async def create_product(
 
 @products_router.put("/{id}")
 async def update_product(
-    id: PydanticObjectId, product: UpdationProduct, products: ProductsServiceDependency
+    id: PydanticObjectId,
+    product: UpdationProduct,
+    products: ProductsServiceDependency,
+    security: SecurityDependency,
 ):
+    security.is_seller_or_raise
+    if db_product := products.get_one(id):
+        if security.auth_user_id != db_product.get("seller_id"):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="You are not authorized to update this product",
+            )
+
     return products.update_one(id, product)
 
 
 @products_router.delete("/{id}")
-async def delete_product(id: PydanticObjectId, products: ProductsServiceDependency):
+async def delete_product(
+    id: PydanticObjectId,
+    products: ProductsServiceDependency,
+    security: SecurityDependency,
+):
+    security.is_seller_or_raise
+    if db_product := products.get_one(id):
+        if security.auth_user_id != db_product.get("seller_id"):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="You are not authorized to update this product",
+            )
+
     return products.delete_one(id)
+
+
+@products_router.get("/get_by_seller/{id}")
+async def get_products_by_seller_id(
+    id: PydanticObjectId, 
+    products: ProductsServiceDependency
+):
+    params = QueryParams(filter=f"seller_id={id}")
+    return products.get_all_active(params)

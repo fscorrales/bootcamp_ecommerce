@@ -17,8 +17,14 @@ users = [
         "role": "seller",
     },
     {
-        "username": "Comprador",
+        "username": "Comprador1",
         "email": "b@b.com",
+        "password": "123",
+        "role": "customer",
+    },
+    {
+        "username": "Comprador2",
+        "email": "d@d.com",
         "password": "123",
         "role": "customer",
     },
@@ -41,6 +47,7 @@ products = [
         "description": "Product 1 description",
         "price": 100,
         "quantity": 10,
+        "image": "https://picsum.photos/200/300?random=1",
     },
     {
         "seller_id": users_ids[0],
@@ -48,6 +55,7 @@ products = [
         "description": "Product 2 description",
         "price": 200,
         "quantity": 20,
+        "image": "https://picsum.photos/200/300?random=2",
     },
     {
         "seller_id": users_ids[0],
@@ -55,6 +63,7 @@ products = [
         "description": "Product 3 description",
         "price": 300,
         "quantity": 30,
+        "image": "https://picsum.photos/200/300?random=3",
     },
     {
         "seller_id": users_ids[0],
@@ -62,6 +71,7 @@ products = [
         "description": "Product 4 description",
         "price": 400,
         "quantity": 40,
+        "image": "https://picsum.photos/200/300?random=4",
     },
     {
         "seller_id": users_ids[0],
@@ -69,6 +79,7 @@ products = [
         "description": "Product 5 description",
         "price": 500,
         "quantity": 50,
+        "image": "https://picsum.photos/200/300?random=5",
     },
     {
         "seller_id": users_ids[0],
@@ -76,6 +87,7 @@ products = [
         "description": "Product 6 description",
         "price": 600,
         "quantity": 60,
+        "image": "https://picsum.photos/200/300?random=6",
     },
     {
         "seller_id": users_ids[1],
@@ -83,6 +95,7 @@ products = [
         "description": "Product 7 description",
         "price": 700,
         "quantity": 70,
+        "image": "https://picsum.photos/200/300?random=7",
     },
     {
         "seller_id": users_ids[1],
@@ -90,6 +103,7 @@ products = [
         "description": "Product 8 description",
         "price": 800,
         "quantity": 80,
+        "image": "https://picsum.photos/200/300?random=8",
     },
     {
         "seller_id": users_ids[1],
@@ -97,6 +111,7 @@ products = [
         "description": "Product 9 description",
         "price": 900,
         "quantity": 90,
+        "image": "https://picsum.photos/200/300?random=9",
     },
     {
         "seller_id": users_ids[1],
@@ -104,6 +119,7 @@ products = [
         "description": "Product 10 description",
         "price": 1000,
         "quantity": 100,
+        "image": "https://picsum.photos/200/300?random=10",
     },
 ]
 
@@ -120,26 +136,67 @@ for product in products:
 orders = [
     {
         "customer_id": users_ids[2],
-        "products": [{
-            "product_id": product_ids[9],
-            "price": 900,
-            "quantity": 1,
-        },
-        {
-            "product_id": product_ids[1],
-            "price": 800,
-            "quantity": 3,
-        }],
-        "status": "completed"
+        "status": "completed",
+        "order_products": [
+            {
+                "product_id": product_ids[3],
+                "price": 400,
+                "quantity": 3,
+            },
+            {
+                "product_id": product_ids[4],
+                "price": 500,
+                "quantity": 2,
+            },
+        ],
     },
     {
         "customer_id": users_ids[2],
-        "products": [{
-            "product_id": product_ids[5],
-            "price": 496,
-            "quantity": 2,
-        }],
-        "status": "completed"
+        "status": "shopping",
+        "order_products": [
+            {
+                "product_id": product_ids[5],
+                "price": 600,
+                "quantity": 2,
+            },
+            {
+                "product_id": product_ids[6],
+                "price": 700,
+                "quantity": 5,
+            },
+        ],
+    },
+    {
+        "customer_id": users_ids[2],
+        "status": "cancelled",
+        "order_products": [
+            {
+                "product_id": product_ids[3],
+                "price": 400,
+                "quantity": 2,
+            },
+            {
+                "product_id": product_ids[5],
+                "price": 600,
+                "quantity": 3,
+            },
+        ],
+    },
+    {
+        "customer_id": users_ids[3],
+        "status": "completed",
+        "order_products": [
+            {
+                "product_id": product_ids[7],
+                "price": 800,
+                "quantity": 1,
+            },
+            {
+                "product_id": product_ids[8],
+                "price": 900,
+                "quantity": 2,
+            },
+        ],
     },
 ]
 

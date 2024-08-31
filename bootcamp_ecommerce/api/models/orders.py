@@ -1,5 +1,5 @@
 __all__ = [
-    "OrderStatus", "OrderItem", "UpdateOrderItem", 
+    "OrderStatus", "OrderProducts", "UpdateOrderProduct", 
     "Order", "StoredOrder"
 ]
 
@@ -7,30 +7,28 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 from pydantic_mongo import PydanticObjectId
-from typing import List 
 
 
 class OrderStatus(str, Enum):
-    pending = "pending"
-    in_progress = "in_progress"
+    shopping = "shopping"
     completed = "completed"
-    canceled = "canceled"
+    cancelled = "cancelled"
 
 
-class OrderItem(BaseModel):
+class OrderProducts(BaseModel):
     product_id: PydanticObjectId
     price: float
     quantity: int
 
 
-class UpdateOrderItem(OrderItem):
+class UpdateOrderProduct(OrderProducts):
     customer_id: PydanticObjectId
 
 
 class Order(BaseModel):
     customer_id: PydanticObjectId
-    products: List[OrderItem]
-    status: OrderStatus = OrderStatus.pending
+    order_products: list[OrderProducts]
+    status: OrderStatus = OrderStatus.shopping
 
 
 class StoredOrder(Order):

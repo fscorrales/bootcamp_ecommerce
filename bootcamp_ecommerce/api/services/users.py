@@ -1,14 +1,15 @@
 __all__ = ["UsersServiceDependency", "UsersService"]
 
 
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from pydantic_mongo import PydanticObjectId
 
+from ..__common_deps import QueryParamsDependency
 from ..config import COLLECTIONS, db
 from ..models import CreationUser, PrivateStoredUser, PublicStoredUser, UpdationUser
-from ..__common_deps import QueryParamsDependency
 
 
 class UsersService:
@@ -43,10 +44,24 @@ class UsersService:
         return None
 
     @classmethod
+    def get_all_active(cls, params: QueryParamsDependency):
+        return [
+            PublicStoredUser.model_validate(user).model_dump()
+            for user in params.query_collection(cls.collection)  # get_deleted=False
+        ]
+
+    @classmethod
+    def get_all_deleted(cls, params: QueryParamsDependency):
+        return [
+            PublicStoredUser.model_validate(user).model_dump()
+            for user in params.query_collection(cls.collection, get_deleted=True)
+        ]
+
+    @classmethod
     def get_all(cls, params: QueryParamsDependency):
         return [
             PublicStoredUser.model_validate(user).model_dump()
-            for user in params.query_collection(cls.collection)
+            for user in params.query_collection(cls.collection, get_deleted=None)
         ]
 
     @classmethod
@@ -84,7 +99,6 @@ class UsersService:
 
     @classmethod
     def update_one(cls, id: PydanticObjectId, user: UpdationUser):
-        print(user.model_dump())
         document = cls.collection.find_one_and_update(
             {"_id": id},
             {"$set": user.model_dump(exclude={"password"}, exclude_unset=True)},
@@ -92,7 +106,9 @@ class UsersService:
         )
 
         if document:
-            return PublicStoredUser.model_validate(document).model_dump()
+            return PublicStoredUser.model_validate(document).model_dump(
+                exclude_none=True
+            )
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -114,7 +130,11 @@ class UsersService:
 
     @classmethod
     def delete_one(cls, id: PydanticObjectId):
-        document = cls.collection.find_one_and_delete({"_id": id})
+        document = cls.collection.find_one_and_update(
+            {"_id": id},
+            {"$set": {"deactivated_at": datetime.now()}},
+            return_document=True,
+        )
         if document:
             return PublicStoredUser.model_validate(document).model_dump()
         else:

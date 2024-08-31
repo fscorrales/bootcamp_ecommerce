@@ -1,9 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from pydantic_mongo import PydanticObjectId
 
-from ..models import BaseUser, CreationUser, UpdationUser
-from ..services import UsersServiceDependency, AuthServiceDependency
 from ..__common_deps import QueryParamsDependency
+from ..models import CreationUser, UpdationUser
+from ..services import AuthServiceDependency, SecurityDependency, UsersServiceDependency
 
 users_router = APIRouter(prefix="/Users", tags=["Users"])
 
@@ -18,7 +18,27 @@ def create_user(
 
 
 @users_router.get("/")
-def get_all_users(users: UsersServiceDependency, params: QueryParamsDependency):
+def get_all_active_users(users: UsersServiceDependency, params: QueryParamsDependency):
+    return users.get_all_active(params)
+
+
+@users_router.get("/deleted")
+def get_all_deleted_users(
+    users: UsersServiceDependency,
+    params: QueryParamsDependency,
+    security: SecurityDependency,
+):
+    security.is_admin_or_raise
+    return users.get_all_deleted(params)
+
+
+@users_router.get("/include_deleted")
+def get_all_users(
+    users: UsersServiceDependency,
+    params: QueryParamsDependency,
+    security: SecurityDependency,
+):
+    security.is_admin_or_raise
     return users.get_all(params)
 
 
@@ -29,11 +49,26 @@ def get_one_user(id: PydanticObjectId, users: UsersServiceDependency):
 
 @users_router.put("/{id}")
 def update_user(
-    id: PydanticObjectId, user: UpdationUser, users: UsersServiceDependency
+    id: PydanticObjectId,
+    user: UpdationUser,
+    users: UsersServiceDependency,
+    security: SecurityDependency,
 ):
+    if not security.is_admin and security.auth_user_id != id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized to update this user",
+        )
     return users.update_one(id=id, user=user)
 
 
 @users_router.delete("/{id}")
-def delete_user(id: PydanticObjectId, users: UsersServiceDependency):
+def delete_user(
+    id: PydanticObjectId, users: UsersServiceDependency, security: SecurityDependency
+):
+    if not security.is_admin and security.auth_user_id != id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized to update this user",
+        )
     return users.delete_one(id=id)
