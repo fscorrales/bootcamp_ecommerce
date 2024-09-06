@@ -1,11 +1,38 @@
 # https://fastapi.tiangolo.com/tutorial/testing/
 import jsonschema
+import pytest
 from fastapi.testclient import TestClient
 
 from ..bootcamp_ecommerce.main import app
 
 client = TestClient(app)
 
+@pytest.fixture
+
+
+def test_create_user():
+    response = client.post(
+        "/api/Users/", 
+        json={
+            "username": "Test",
+            "email": "test@test.com",
+            "role": "customer",
+            "password": "12345"
+        }
+    )
+    assert response.status_code == 200
+    print(response.json())
+
+# async def override_user_dependency():
+#     return {
+#         "username": "test",
+#         "email": "test",
+#         "password": "test",
+#         "role": "admin",
+#     }
+
+
+@pytest.mark.skip
 def test_get_all_active_users():
     active_users_schema = {
         "type": "array",

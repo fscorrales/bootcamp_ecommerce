@@ -14,7 +14,10 @@ def create_user(
 ):
     hash_password = auth.get_password_hash(user.password)
     inserted_id = users.create_one(user, hash_password)
-    return {"result message": f"User created with id: {inserted_id}"}
+    return {
+        "result message": f"User created with id: {inserted_id}",
+        "user_id": inserted_id
+    }
 
 
 @users_router.get("/")
