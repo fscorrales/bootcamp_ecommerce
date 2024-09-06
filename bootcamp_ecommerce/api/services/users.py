@@ -143,7 +143,7 @@ class UsersService:
             )
 
     @classmethod
-    def delete_forever(cls, id: PydanticObjectId):
+    def delete_one_forever(cls, id: PydanticObjectId):
         document = cls.collection.find_one_and_delete({"_id": id})
         if document:
             return PublicStoredUser.model_validate(document).model_dump()
