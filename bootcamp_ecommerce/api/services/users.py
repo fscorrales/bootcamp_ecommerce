@@ -142,5 +142,15 @@ class UsersService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
 
+    @classmethod
+    def delete_forever(cls, id: PydanticObjectId):
+        document = cls.collection.find_one_and_delete({"_id": id})
+        if document:
+            return PublicStoredUser.model_validate(document).model_dump()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
+
 
 UsersServiceDependency = Annotated[UsersService, Depends()]

@@ -1,16 +1,34 @@
 # https://fastapi.tiangolo.com/tutorial/testing/
 import jsonschema
 import pytest
+from bson import ObjectId
 from fastapi.testclient import TestClient
 
+from ..bootcamp_ecommerce.api.services import UsersServiceDependency
 from ..bootcamp_ecommerce.main import app
 
 client = TestClient(app)
 
+
 @pytest.fixture
+def setup_and_teardow_users(request):
+    yield
+    if hasattr(request, "response_data") and "user_id" in request.response_data:
+        UsersServiceDependency().delete_forever(
+            id=ObjectId(request.response_data["user_id"])
+        )
+
+def test_create_user_without_body(setup_and_teardow_users):
+    response = client.post(
+        "/api/Users/", 
+        json={}
+    )
+    assert response.status_code == 422
+    # request.response_data = response.json()
+    print(response.json())
 
 
-def test_create_user():
+def test_create_user(setup_and_teardow_users):
     response = client.post(
         "/api/Users/", 
         json={
@@ -21,18 +39,14 @@ def test_create_user():
         }
     )
     assert response.status_code == 200
+    # request.response_data = response.json()
+    # if user_id:=response.json().get("user_id"):
+    #     UsersServiceDependency().delete_forever(
+    #         id = ObjectId(user_id)
+    #     )
     print(response.json())
 
-# async def override_user_dependency():
-#     return {
-#         "username": "test",
-#         "email": "test",
-#         "password": "test",
-#         "role": "admin",
-#     }
 
-
-@pytest.mark.skip
 def test_get_all_active_users():
     active_users_schema = {
         "type": "array",
@@ -56,3 +70,11 @@ def test_get_all_active_users():
         instance=response.json(), schema=active_users_schema
     )
 
+
+# async def override_user_dependency():
+#     return {
+#         "username": "test",
+#         "email": "test",
+#         "password": "test",
+#         "role": "admin",
+#     }
