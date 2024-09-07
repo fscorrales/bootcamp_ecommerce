@@ -32,7 +32,7 @@ def login_with_cookie(
 def read_current_user(security: SecurityDependency):
     return dict(
         id=security.auth_user_id,
-        name=security.auth_user_name,
+        username=security.auth_user_name,
         email=security.auth_user_email,
         role=security.auth_user_role,
     )

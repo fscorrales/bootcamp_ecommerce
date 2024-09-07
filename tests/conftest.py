@@ -32,13 +32,18 @@ def create_and_delete_admin(dict_test_user):
 
 @pytest.fixture
 def login_as_admin(create_and_delete_admin, dict_test_user):
+    user_id = create_and_delete_admin
     user = LoginUser(**dict_test_user)
     access_token = AuthService().login_and_set_access_token(
         db_user = UsersServiceDependency().get_one(username=user.username, with_password=True),
         user=user,
         response=Response()
     )
-    return access_token
+    access_token = access_token.get("access_token")
+    return {
+        "access_token": access_token,
+        "user_id": user_id
+    }
 
 
 @pytest.fixture
