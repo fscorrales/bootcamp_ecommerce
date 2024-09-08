@@ -10,6 +10,10 @@ def test_get_all_deleted_users_without_credentials():
 
 
 def test_get_all_deleted_users(login_as_admin):
-    print(login_as_admin)
-    response = client.get("/api/Users/deleted")
+    access_token = login_as_admin.get("access_token")
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = client.get(
+        "/api/Users/deleted",
+        headers = headers
+    )
     assert response.status_code == 200

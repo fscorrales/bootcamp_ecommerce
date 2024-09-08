@@ -75,3 +75,4 @@ def delete_user(
             detail="You are not authorized to update this user",
         )
     return users.delete_one(id=id)
+    
