@@ -25,6 +25,8 @@ def create_and_delete_admin(dict_test_user):
         hash_password = AuthServiceDependency().get_password_hash(user.password),
         make_it_admin = True
     )
+    print(user_id)
+    print(UsersServiceDependency().get_one(id = ObjectId(user_id)))
     yield user_id
     UsersServiceDependency().delete_one_forever(
             id = ObjectId(user_id)
