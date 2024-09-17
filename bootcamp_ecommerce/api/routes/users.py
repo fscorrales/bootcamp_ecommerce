@@ -49,9 +49,7 @@ def get_all_users(
 def get_one_user(id: PydanticObjectId, users: UsersServiceDependency):
     return users.get_one(id=id)
 
-# permite insetar un registro con username nulo lo que genera un error en la BD
-# permite instear un registro con email nulo lo que genera error al utilizar 
-# el método get_one()
+
 @users_router.put("/{id}")
 def update_user(
     id: PydanticObjectId,
