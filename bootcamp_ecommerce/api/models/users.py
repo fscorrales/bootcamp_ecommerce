@@ -10,9 +10,8 @@ __all__ = [
 from datetime import datetime
 from enum import Enum
 
-from pydantic import AliasChoices, BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 from pydantic_mongo import PydanticObjectId
-
 
 class CreationRole(str, Enum):
     customer = "customer"
@@ -35,6 +34,13 @@ class UpdationUser(BaseUser):
     username: str | None = None
     email: str | None = None
     image: str | None = None
+
+    @field_validator('username', 'email', mode='after')
+    @classmethod
+    def not_empty(cls, field: str) -> str:
+        if not field:
+            raise ValueError('No puede estar vacío')
+        return field
 
 
 class CreationUser(BaseUser):
