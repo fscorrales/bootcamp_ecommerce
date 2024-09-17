@@ -75,7 +75,7 @@ def test_update_user(
      {"username": "UpdatedTest", "email": None}]
 ) #Falta el campo image
 
-def test_update_user_invalid_fields(
+def test_update_user_with_invalid_fields(
     login_as_admin, create_and_delete_customer, 
     updated_fields
 ):
