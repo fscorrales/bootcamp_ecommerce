@@ -6,7 +6,14 @@ from fastapi.templating import Jinja2Templates
 from .api.config import allowed_origins
 from .api.routes import api_router, auth_router
 
-app = FastAPI(title="Final Project API")
+tags_metadata = [
+    {"name": "Auth"},
+    {"name": "Users"},
+    {"name": "Products"},
+    {"name": "Orders"},
+]
+
+app = FastAPI(title="Final Project API", openapi_tags=tags_metadata)
 
 # Include our API routes
 app.include_router(api_router)
