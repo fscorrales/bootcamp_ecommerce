@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Form
+
+from typing import Annotated
 
 from ..models import CreationUser, LoginUser
 from ..services import AuthServiceDependency, SecurityDependency, UsersServiceDependency
@@ -8,7 +10,7 @@ auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @auth_router.post("/login")
 def login_with_cookie(
-    user: LoginUser,
+    user: Annotated[LoginUser, Form()],
     response: Response,
     users: UsersServiceDependency,
     auth: AuthServiceDependency,

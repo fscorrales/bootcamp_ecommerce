@@ -5,7 +5,7 @@ from ..__common_deps import QueryParamsDependency
 from ..models import CreationUser, UpdationUser
 from ..services import AuthServiceDependency, SecurityDependency, UsersServiceDependency
 
-users_router = APIRouter(prefix="/Users", tags=["Users"])
+users_router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @users_router.post("/")
@@ -16,7 +16,7 @@ def create_user(
     inserted_id = users.create_one(user, hash_password)
     return {
         "result message": f"User created with id: {inserted_id}",
-        "user_id": inserted_id
+        "user_id": inserted_id,
     }
 
 
@@ -75,4 +75,3 @@ def delete_user(
             detail="You are not authorized to update this user",
         )
     return users.delete_one(id=id)
-    
